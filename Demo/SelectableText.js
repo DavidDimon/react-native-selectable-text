@@ -117,6 +117,11 @@ export const SelectableText = ({ onSelection, onHighlightPress, value, children,
                     onHighlightPress && onHighlightPress(id)
                   }
                 }}
+                onLongPress={() => {
+                  if (isHighlight) {
+                    onHighlightPress && onHighlightPress(id)
+                  }
+                }}
               >
                 {text}
               </Text>
