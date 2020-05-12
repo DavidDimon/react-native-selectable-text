@@ -110,6 +110,37 @@ UITextPosition* beginning;
     [menuController setMenuVisible:YES animated:YES];
 }
 
+- (void) _handleHighlightGesture
+{
+    if (!_backedTextInputView.isFirstResponder) {
+        [_backedTextInputView becomeFirstResponder];
+    }
+    
+    UIMenuController *menuController = [UIMenuController sharedMenuController];
+    
+    if (menuController.isMenuVisible) return;
+    
+    NSMutableArray *menuControllerItems = [NSMutableArray arrayWithCapacity:self.menuItems.count];
+    
+    for(NSString *menuItemName in self.menuItems) {
+        NSString *sel = [NSString stringWithFormat:@"%@%@", CUSTOM_SELECTOR, menuItemName];
+        UIMenuItem *item = [[UIMenuItem alloc] initWithTitle: menuItemName
+                                                      action: NSSelectorFromString(sel)];
+        
+        if ([menuItemName isEqualToString:@"Marcar"]) {
+            sel = [NSString stringWithFormat:@"%@%@", CUSTOM_SELECTOR, @"Desmarcar"];
+            item = [[UIMenuItem alloc] initWithTitle: @"Desmarcar"
+                                              action: NSSelectorFromString(sel)];
+        }
+        
+        [menuControllerItems addObject: item];
+    }
+    
+    menuController.menuItems = menuControllerItems;
+    [menuController setTargetRect:self.bounds inView:self];
+    [menuController setMenuVisible:YES animated:YES];
+}
+
 -(void) handleSingleTap: (UITapGestureRecognizer *) gesture
 {
     CGPoint pos = [gesture locationInView:_backedTextInputView];
@@ -126,6 +157,27 @@ UITextPosition* beginning;
     const NSInteger location = [_backedTextInputView offsetFromPosition:beginning toPosition:selectionStart];
     const NSInteger endLocation = [_backedTextInputView offsetFromPosition:beginning toPosition:selectionEnd];
     
+    BOOL isHighlight = false;
+
+    for (NSDictionary *cur in _highlights) {
+        NSInteger selectionStart = [[cur objectForKey:@"start"] integerValue];
+        NSInteger selectionEnd = [[cur objectForKey:@"end"] integerValue];
+        
+        if (location >= selectionStart && location <= selectionEnd) {
+            [_backedTextInputView select:self];
+            [_backedTextInputView setSelectedRange:NSMakeRange(selectionStart, selectionEnd - selectionStart)];
+            [self _handleHighlightGesture];
+            isHighlight = true;
+            break;
+        }
+    }
+
+    if(!isHighlight) {
+      [_backedTextInputView select:self];
+      [_backedTextInputView selectAll:self];
+      [self _handleGesture];
+    }
+
     self.onHighlightPress(@{
         @"clickedRangeStart": @(location),
         @"clickedRangeEnd": @(endLocation),
@@ -249,7 +301,26 @@ UITextPosition* beginning;
 {
     if (!_backedTextInputView.isFirstResponder) {
         [_backedTextInputView setSelectedTextRange:nil notifyDelegate:true];
+    } else {
+        UIView *sub = nil;
+        for (UIView *subview in self.subviews.reverseObjectEnumerator) {
+            CGPoint subPoint = [subview convertPoint:point toView:self];
+            UIView *result = [subview hitTest:subPoint withEvent:event];
+
+            if (!result.isFirstResponder) {
+                NSString *name = NSStringFromClass([result class]);
+
+                if ([name isEqual:@"UITextRangeView"]) {
+                    sub = result;
+                }
+            }
+        }
+        
+        if (sub == nil) {
+            [_backedTextInputView setSelectedTextRange:nil notifyDelegate:true];
+        }
     }
+
     return [super hitTest:point withEvent:event];
 }
 
