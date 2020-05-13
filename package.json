@@ -1,6 +1,6 @@
 {
   "name": "@astrocoders/react-native-selectable-text",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "React Native component used to provide the features of pass different context menu items and events",
   "main": "index.js",
   "homepage": "https://github.com/Astrocoders/react-native-selectable-text",
@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "fast-memoize": "^2.5.1",
+    "ramda": "^0.26.1",
     "uuid": "^3.3.2"
   }
 }

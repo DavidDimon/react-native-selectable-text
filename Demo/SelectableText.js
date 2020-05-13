@@ -1,13 +1,11 @@
 import React from 'react'
 import { Text, requireNativeComponent, Platform } from 'react-native'
 import { v4 } from 'uuid'
+import * as R from 'ramda'
 import memoize from 'fast-memoize'
 
 const RNSelectableText = requireNativeComponent('RNSelectableText')
 
-/**
- * numbers: array({start: int, end: int, id: string})
- */
 const combineHighlights = memoize(numbers => {
   return numbers
     .sort((a, b) => a.start - b.start || a.end - b.end)
@@ -65,70 +63,65 @@ const mapHighlightsRanges = (value, highlights) => {
  * children: ReactNode
  * highlights: array({ id, start, end })
  * highlightColor: string
- * onHighlightPress: string => void
  */
-export const SelectableText = ({ onSelection, onHighlightPress, value, children, ...props }) => {
-  const onSelectionNative = ({
-    nativeEvent: { content, eventType, selectionStart, selectionEnd },
-  }) => {
-    onSelection && onSelection({ content, eventType, selectionStart, selectionEnd })
+export class SelectableText extends React.PureComponent {
+  constructor(props) {
+    super(props)
+
+    this.ref = React.createRef()
   }
 
-  const onHighlightPressNative = onHighlightPress
-    ? Platform.OS === 'ios'
-      ? ({ nativeEvent: { clickedRangeStart, clickedRangeEnd } }) => {
-          if (!props.highlights || props.highlights.length === 0) return
+  onSelectionNative = ({ nativeEvent: { content, eventType, selectionStart, selectionEnd, highlightId } }) => {
+    if (this.props.onSelection) {
+      this.props.onSelection({
+        content,
+        eventType,
+        selectionStart,
+        selectionEnd,
+        highlightId,
+      })
+    }
+  }
 
-          const mergedHighlights = combineHighlights(props.highlights)
+  render() {
+    const { onSelection, onHighlightPress, value, strikenTextStyle, children, ...props } = this.props
 
-          const hightlightInRange = mergedHighlights.find(
-            ({ start, end }) => clickedRangeStart >= start - 1 && clickedRangeEnd <= end + 1,
-          )
+    return (
+      <RNSelectableText
+        {...props}
+        selectable
+        onSelection={this.onSelectionNative}
+        highlights={props.highlights || []}
+        ref={this.ref}
+      >
+        {R.compose(
+          R.map(({ highlight, text, isStrike }) => {
+            const strikeStyle = isStrike ? strikenTextStyle : {}
+            const highlightStyle = {
+              backgroundColor: props.highlightColor,
+              ...strikeStyle,
+            }
 
-          if (hightlightInRange) {
-            onHighlightPress(hightlightInRange.id)
-          }
-        }
-      : onHighlightPress
-    : () => {}
+            const hasHighlights = Array.isArray(highlight) && highlight.length > 0
 
-  return (
-    <RNSelectableText
-      {...props}
-      onHighlightPress={onHighlightPressNative}
-      selectable
-      onSelection={onSelectionNative}
-    >
-      <Text selectable key={v4()}>
-        {props.highlights && props.highlights.length > 0
-          ? mapHighlightsRanges(value, props.highlights).map(({ id, isHighlight, text }) => (
-              <Text
-                key={v4()}
-                selectable
-                style={
-                  isHighlight
-                    ? {
-                        backgroundColor: props.highlightColor,
-                      }
-                    : {}
-                }
-                onPress={() => {
-                  if (isHighlight) {
-                    onHighlightPress && onHighlightPress(id)
-                  }
-                }}
-                onLongPress={() => {
-                  if (isHighlight) {
-                    onHighlightPress && onHighlightPress(id)
-                  }
-                }}
-              >
-                {text}
+            if (!hasHighlights) {
+              return (
+                <Text key={v4()} selectable style={strikeStyle}>
+                  {text}
+                </Text>
+              )
+            }
+
+            return mapHighlightsRanges(text, highlight).map(item => (
+              <Text key={v4()} selectable style={item.isHighlight ? highlightStyle : strikeStyle}>
+                {item.text}
               </Text>
             ))
-          : value}
+          }),
+          R.flatten,
+        )(value)}
         {props.appendToChildren ? props.appendToChildren : null}
-      </Text>
-    </RNSelectableText>
-  )
+      </RNSelectableText>
+    )
+  }
 }
