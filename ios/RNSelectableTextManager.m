@@ -12,6 +12,7 @@ RCT_EXPORT_MODULE()
 }
 
 RCT_EXPORT_VIEW_PROPERTY(onSelection, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onSelectionCallback, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(menuItems, NSArray);
 RCT_EXPORT_VIEW_PROPERTY(value, NSString);
 RCT_EXPORT_VIEW_PROPERTY(onHighlightPress, RCTDirectEventBlock)

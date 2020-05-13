@@ -154,9 +154,15 @@ UITextPosition* beginning;
     UITextPosition *selectionStart = word.start;
     UITextPosition *selectionEnd = word.end;
     
+    
     const NSInteger location = [_backedTextInputView offsetFromPosition:beginning toPosition:selectionStart];
     const NSInteger endLocation = [_backedTextInputView offsetFromPosition:beginning toPosition:selectionEnd];
     
+    self.onSelectionCallback(@{
+        @"clickedRangeStart": @(location),
+        @"clickedRangeEnd": @(endLocation),
+    });
+
     BOOL isHighlight = false;
 
     for (NSDictionary *cur in _highlights) {
@@ -215,6 +221,11 @@ UITextPosition* beginning;
     const NSInteger endLocation = [_backedTextInputView offsetFromPosition:beginning toPosition:selectionEnd];
 
     if (location == 0 && endLocation == 0) return;
+    
+    self.onSelectionCallback(@{
+      @"clickedRangeStart": @(location),
+      @"clickedRangeEnd": @(endLocation),
+    });
 
     [_backedTextInputView select:self];
     [_backedTextInputView setSelectedRange:NSMakeRange(location, endLocation - location)];
