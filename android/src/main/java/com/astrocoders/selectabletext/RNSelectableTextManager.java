@@ -33,7 +33,6 @@ import java.util.ArrayList;
 
 public class RNSelectableTextManager extends ReactTextViewManager {
     public static final String REACT_CLASS = "RNSelectableText";
-    private String clickedHighlightId = "";
     private ActionMode mActionMode;
     private ReadableArray menuItems;
     private ReadableArray highlights;
@@ -84,7 +83,7 @@ public class RNSelectableTextManager extends ReactTextViewManager {
     @ReactProp(name = "menuItems")
     public void setMenuItems(ReactTextView textView, ReadableArray items) {
         this.menuItems = items;
-        List<String> result = new ArrayList<String>(items.size());
+        List < String > result = new ArrayList < String > (items.size());
         for (int i = 0; i < items.size(); i++) {
             result.add(items.getString(i));
         }
@@ -107,60 +106,52 @@ public class RNSelectableTextManager extends ReactTextViewManager {
                 float x = event.getX();
                 float y = event.getY();
 
-                if (event.getAction() ==  MotionEvent.ACTION_DOWN) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN 
+                    || event.getAction() == MotionEvent.ACTION_MOVE) {
                     if (mActionMode != null) {
                         mActionMode.finish();
                     }
-                    int offset = textView.getOffsetForPosition(x, y);
 
-                    for (int i = 0; i < highlights.size(); i++) {
-                        final ReadableMap currentItem = highlights.getMap(i);
-                        if (offset >= currentItem.getInt("start") && offset <= currentItem.getInt("end")) {
-                            clickedHighlightId = currentItem.getString("id");
-                            textView.startActionMode(new Callback() {
-                                @Override
-                                public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-                                    mActionMode = mode;
+                    textView.startActionMode(new Callback() {
+                        @Override
+                        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                            mActionMode = mode;
 
-                                    return true;
-                                }
-
-                                @Override
-                                public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-                                    mActionMode = mode;
-
-                                    menu.add(0, 0, 0, "Desmarcar");
-
-                                    for (int i = 1; i < menuItems.size(); i++) {
-                                        menu.add(0, i, 0, menuItems.getString(i));
-                                    }
-
-                                    return true;
-                                }
-
-                                @Override
-                                public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-                                    int selectionStart = currentItem.getInt("start");
-                                    int selectionEnd = currentItem.getInt("end");
-                                    String selectedText = textView.getText().toString().substring(selectionStart, selectionEnd);
-                                    String eventType = menuItems.getString(item.getItemId());
-
-                                    // Dispatch event
-                                    onSelectNativeEvent(view, eventType.equals("Marcar") ? "Desmarcar" : eventType, selectedText, selectionStart, selectionEnd, currentItem.getString("id"));
-
-                                    mode.finish();
-
-                                    return true;
-                                }
-
-                                @Override
-                                public void onDestroyActionMode(ActionMode mode) {
-                                    mActionMode = null;
-                                }
-                            }, ActionMode.TYPE_FLOATING);
-                            break;
+                            return true;
                         }
-                    }
+
+                        @Override
+                        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                            mActionMode = mode;
+
+                            for (int i = 0; i < menuItems.size(); i++) {
+                                menu.add(0, i, 0, menuItems.getString(i));
+                            }
+
+                            return true;
+                        }
+
+                        @Override
+                        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                            int selectionStart = view.getSelectionStart();
+                            int selectionEnd = view.getSelectionEnd();
+                            String selectedText = textView.getText().toString().substring(selectionStart, selectionEnd);
+                            String eventType = menuItems.getString(item.getItemId());
+
+                            // Dispatch event
+                            onSelectNativeEvent(view, eventType, selectedText, selectionStart, selectionEnd, "");
+
+                            mode.finish();
+
+                            return true;
+                        }
+
+                        @Override
+                        public void onDestroyActionMode(ActionMode mode) {
+                            mActionMode = null;
+                        }
+                    }, ActionMode.TYPE_FLOATING);
+
                 }
 
                 return tv.onTouchEvent(event);
@@ -177,8 +168,22 @@ public class RNSelectableTextManager extends ReactTextViewManager {
                 // Android Smart Linkify feature pushes extra options into the menu
                 // and would override the generated menu items
                 menu.clear();
+
+                // boolean hasHighlight = false;
+
+                // int selectionStart = view.getSelectionStart();
+                // int selectionEnd = view.getSelectionEnd();
+                
+                // for (int i = 0; i < highlights.size(); i++) {
+                //     final ReadableMap currentItem = highlights.getMap(i);
+                //     if (currentItem.getInt("end") >= selectionStart && currentItem.getInt("end") <= selectionEnd) {
+                //         hasHighlight = true;
+                //         break;
+                //     }
+                // }
                 for (int i = 0; i < menuItems.length; i++) {
-                  menu.add(0, i, 0, menuItems[i]);
+                    String value = hasHighlight && i == 0 ? "Desmarcar" : menuItems[i];
+                    menu.add(0, i, 0, value);
                 }
                 return true;
             }
@@ -189,8 +194,7 @@ public class RNSelectableTextManager extends ReactTextViewManager {
             }
 
             @Override
-            public void onDestroyActionMode(ActionMode mode) {
-            }
+            public void onDestroyActionMode(ActionMode mode) {}
 
             @Override
             public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
@@ -220,19 +224,19 @@ public class RNSelectableTextManager extends ReactTextViewManager {
         // Dispatch
         ReactContext reactContext = (ReactContext) view.getContext();
         reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
-                view.getId(),
-                "topSelection",
-                event
+            view.getId(),
+            "topSelection",
+            event
         );
     }
 
     @Override
     public Map getExportedCustomDirectEventTypeConstants() {
         return MapBuilder.builder()
-                .put(
-                        "topSelection",
-                        MapBuilder.of(
-                                "registrationName","onSelection"))
-                .build();
+            .put(
+                "topSelection",
+                MapBuilder.of(
+                    "registrationName", "onSelection"))
+            .build();
     }
 }

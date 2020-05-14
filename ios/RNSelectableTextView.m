@@ -68,7 +68,6 @@ UITextPosition* beginning;
         
         UILongPressGestureRecognizer *longPressGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
         
-        
         UITapGestureRecognizer *tapGesture = [ [UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
         tapGesture.numberOfTapsRequired = 2;
         
@@ -83,21 +82,6 @@ UITextPosition* beginning;
     }
 
     return self;
-}
-
-- (void) textViewDidChangeSelection: (UIPanGestureRecognizer *) gesture
-{
-    RCTTextSelection *selection = self.selection;
-    
-    NSUInteger start = selection.start;
-    NSUInteger end = selection.end;
-    NSUInteger length = selection.end - selection.start;
-
-    self.onSelectionCallback(@{
-        @"clickedRangeStart": @(start),
-        @"clickedRangeEnd": @(end),
-        @"length": @(length),
-    });
 }
 
 -(void) _handleGesture
@@ -165,12 +149,6 @@ UITextPosition* beginning;
         NSString *sel = [NSString stringWithFormat:@"%@%@", CUSTOM_SELECTOR, menuItemName];
         UIMenuItem *item = [[UIMenuItem alloc] initWithTitle: menuItemName
                                                       action: NSSelectorFromString(sel)];
-        
-        if ([menuItemName isEqualToString:@"Marcar"]) {
-            sel = [NSString stringWithFormat:@"%@%@", CUSTOM_SELECTOR, @"Desmarcar"];
-            item = [[UIMenuItem alloc] initWithTitle: @"Desmarcar"
-                                              action: NSSelectorFromString(sel)];
-        }
         
         [menuControllerItems addObject: item];
     }
