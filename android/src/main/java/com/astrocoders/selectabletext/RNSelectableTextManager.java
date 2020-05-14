@@ -182,8 +182,8 @@ public class RNSelectableTextManager extends ReactTextViewManager {
                 //     }
                 // }
                 for (int i = 0; i < menuItems.length; i++) {
-                    String value = hasHighlight && i == 0 ? "Desmarcar" : menuItems[i];
-                    menu.add(0, i, 0, value);
+                    // String value = hasHighlight && i == 0 ? "Desmarcar" : menuItems[i];
+                    menu.add(0, i, 0, menuItems[i]);
                 }
                 return true;
             }
