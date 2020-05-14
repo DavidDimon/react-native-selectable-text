@@ -85,11 +85,38 @@ UITextPosition* beginning;
     return self;
 }
 
+- (void) textViewDidChangeSelection: (UIPanGestureRecognizer *) gesture
+{
+    RCTTextSelection *selection = self.selection;
+    
+    NSUInteger start = selection.start;
+    NSUInteger end = selection.end;
+    NSUInteger length = selection.end - selection.start;
+
+    self.onSelectionCallback(@{
+        @"clickedRangeStart": @(start),
+        @"clickedRangeEnd": @(end),
+        @"length": @(length),
+    });
+}
+
 -(void) _handleGesture
 {
     if (!_backedTextInputView.isFirstResponder) {
         [_backedTextInputView becomeFirstResponder];
     }
+
+    RCTTextSelection *selection = self.selection;
+    
+    NSUInteger start = selection.start;
+    NSUInteger end = selection.end;
+    NSUInteger length = selection.end - selection.start;
+
+    self.onSelectionCallback(@{
+        @"clickedRangeStart": @(start),
+        @"clickedRangeEnd": @(end),
+        @"length": @(length),
+    });
     
     UIMenuController *menuController = [UIMenuController sharedMenuController];
     
@@ -115,6 +142,18 @@ UITextPosition* beginning;
     if (!_backedTextInputView.isFirstResponder) {
         [_backedTextInputView becomeFirstResponder];
     }
+
+    RCTTextSelection *selection = self.selection;
+    
+    NSUInteger start = selection.start;
+    NSUInteger end = selection.end;
+    NSUInteger length = selection.end - selection.start;
+
+    self.onSelectionCallback(@{
+        @"clickedRangeStart": @(start),
+        @"clickedRangeEnd": @(end),
+        @"length": @(length),
+    });
     
     UIMenuController *menuController = [UIMenuController sharedMenuController];
     
@@ -157,11 +196,6 @@ UITextPosition* beginning;
     
     const NSInteger location = [_backedTextInputView offsetFromPosition:beginning toPosition:selectionStart];
     const NSInteger endLocation = [_backedTextInputView offsetFromPosition:beginning toPosition:selectionEnd];
-    
-    self.onSelectionCallback(@{
-        @"clickedRangeStart": @(location),
-        @"clickedRangeEnd": @(endLocation),
-    });
 
     BOOL isHighlight = false;
 
@@ -192,7 +226,6 @@ UITextPosition* beginning;
 
 -(void) handleLongPress: (UILongPressGestureRecognizer *) gesture
 {
-    
     CGPoint pos = [gesture locationInView:_backedTextInputView];
     pos.y += _backedTextInputView.contentOffset.y;
     
@@ -221,11 +254,6 @@ UITextPosition* beginning;
     const NSInteger endLocation = [_backedTextInputView offsetFromPosition:beginning toPosition:selectionEnd];
 
     if (location == 0 && endLocation == 0) return;
-    
-    self.onSelectionCallback(@{
-      @"clickedRangeStart": @(location),
-      @"clickedRangeEnd": @(endLocation),
-    });
 
     [_backedTextInputView select:self];
     [_backedTextInputView setSelectedRange:NSMakeRange(location, endLocation - location)];

@@ -102,10 +102,10 @@ export const SelectableText = ({
   }
 
   const onSelectionCallbackNative = ({
-    nativeEvent: { clickedRangeStart, clickedRangeEnd },
+    nativeEvent: { clickedRangeStart, clickedRangeEnd, length },
   }) => {
     onSelectionCallback &&
-      onSelectionCallback({ clickedRangeStart, clickedRangeEnd })
+      onSelectionCallback({ clickedRangeStart, clickedRangeEnd, length })
   }
 
   const onHighlightPressNative = onHighlightPress
