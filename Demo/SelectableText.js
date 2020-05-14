@@ -1,9 +1,9 @@
-import React from "react"
-import { Text, requireNativeComponent, Platform } from "react-native"
-import { v4 } from "uuid"
-import memoize from "fast-memoize"
+import React from 'react'
+import { Text, requireNativeComponent, Platform } from 'react-native'
+import { v4 } from 'uuid'
+import memoize from 'fast-memoize'
 
-const RNSelectableText = requireNativeComponent("RNSelectableText")
+const RNSelectableText = requireNativeComponent('RNSelectableText')
 
 /**
  * numbers: array({start: int, end: int, id: string})
@@ -109,7 +109,7 @@ export const SelectableText = ({
   }
 
   const onHighlightPressNative = onHighlightPress
-    ? Platform.OS === "ios"
+    ? Platform.OS === 'ios'
       ? ({ nativeEvent: { clickedRangeStart, clickedRangeEnd } }) => {
           if (!props.highlights || props.highlights.length === 0) return
 
@@ -131,9 +131,11 @@ export const SelectableText = ({
     <RNSelectableText
       {...props}
       onHighlightPress={onHighlightPressNative}
-      selectable
       onSelection={onSelectionNative}
-      onSelectionCallback={onSelectionCallbackNative}
+      onSelectionCallback={
+        Platform.OS === 'ios' ? onSelectionCallbackNative : () => ''
+      }
+      selectable
     >
       <Text selectable key={v4()}>
         {props.highlights && props.highlights.length > 0
