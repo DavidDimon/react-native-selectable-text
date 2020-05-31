@@ -8,6 +8,7 @@ import android.view.ActionMode;
 import android.view.ActionMode.Callback;
 import android.view.MotionEvent;
 import android.text.Spannable;
+import android.text.Selection;
 import android.widget.TextView;
 import android.view.View;
 
@@ -94,69 +95,6 @@ public class RNSelectableTextManager extends ReactTextViewManager {
     @ReactProp(name = "highlights")
     public void setHighlights(ReactTextView textView, ReadableArray items) {
         this.highlights = items;
-        registerTouchListener(items, textView);
-    }
-
-    public void registerTouchListener(final ReadableArray highlights, final ReactTextView view) {
-        view.setOnTouchListener(new TextView.OnTouchListener() {
-            @Override
-            public boolean onTouch(View tv, MotionEvent event) {
-                final ReactTextView textView = (ReactTextView) tv;
-
-                float x = event.getX();
-                float y = event.getY();
-
-                if (event.getAction() == MotionEvent.ACTION_DOWN 
-                    || event.getAction() == MotionEvent.ACTION_MOVE) {
-                    if (mActionMode != null) {
-                        mActionMode.finish();
-                    }
-
-                    textView.startActionMode(new Callback() {
-                        @Override
-                        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-                            mActionMode = mode;
-
-                            return true;
-                        }
-
-                        @Override
-                        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-                            mActionMode = mode;
-
-                            for (int i = 0; i < menuItems.size(); i++) {
-                                menu.add(0, i, 0, menuItems.getString(i));
-                            }
-
-                            return true;
-                        }
-
-                        @Override
-                        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-                            int selectionStart = view.getSelectionStart();
-                            int selectionEnd = view.getSelectionEnd();
-                            String selectedText = textView.getText().toString().substring(selectionStart, selectionEnd);
-                            String eventType = menuItems.getString(item.getItemId());
-
-                            // Dispatch event
-                            onSelectNativeEvent(view, eventType, selectedText, selectionStart, selectionEnd, "");
-
-                            mode.finish();
-
-                            return true;
-                        }
-
-                        @Override
-                        public void onDestroyActionMode(ActionMode mode) {
-                            mActionMode = null;
-                        }
-                    }, ActionMode.TYPE_FLOATING);
-
-                }
-
-                return tv.onTouchEvent(event);
-            }
-        });
     }
 
     public void registerSelectionListener(final String[] menuItems, final ReactTextView view) {
@@ -190,6 +128,7 @@ public class RNSelectableTextManager extends ReactTextViewManager {
 
             @Override
             public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                Selection.setSelection((Spannable) view.getText(), 0, view.getText().length());
                 return true;
             }
 
