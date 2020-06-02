@@ -36,7 +36,6 @@ public class RNSelectableTextManager extends ReactTextViewManager {
     public static final String REACT_CLASS = "RNSelectableText";
     private ActionMode mActionMode;
     private ReadableArray menuItems;
-    private ReadableArray highlights;
 
     @Override
     public String getName() {
@@ -45,8 +44,9 @@ public class RNSelectableTextManager extends ReactTextViewManager {
 
     @Override
     public ReactTextView createViewInstance(ThemedReactContext context) {
-        ReactTextView view = new ReactTextView(context) {
+        RNSelectableTextView view = new RNSelectableTextView(context) {
             private Spannable mSpanned;
+            private ReadableArray highlights;
 
             @Override
             public void setText(ReactTextUpdate update) {
@@ -74,12 +74,12 @@ public class RNSelectableTextManager extends ReactTextViewManager {
                     mActionMode.finish();
                 }
                 super.onFocusChanged(focused, direction, previouslyFocusedRect);
-            }
+            }            
         };
+        
 
         return view;
     }
-
 
     @ReactProp(name = "menuItems")
     public void setMenuItems(ReactTextView textView, ReadableArray items) {
@@ -87,18 +87,22 @@ public class RNSelectableTextManager extends ReactTextViewManager {
         List < String > result = new ArrayList < String > (items.size());
         for (int i = 0; i < items.size(); i++) {
             result.add(items.getString(i));
-        }
+        }        
 
         registerSelectionListener(result.toArray(new String[items.size()]), textView);
     }
 
     @ReactProp(name = "highlights")
     public void setHighlights(ReactTextView textView, ReadableArray items) {
-        this.highlights = items;
+        RNSelectableTextView rnView = (RNSelectableTextView)textView;
+        rnView.setHighlights(items);             
     }
 
     public void registerSelectionListener(final String[] menuItems, final ReactTextView view) {
+        
         view.setCustomSelectionActionModeCallback(new Callback() {
+            RNSelectableTextView rnView = (RNSelectableTextView)view;
+
             @Override
             public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
                 // Called when action mode is first created. The menu supplied
@@ -127,7 +131,20 @@ public class RNSelectableTextManager extends ReactTextViewManager {
             }
 
             @Override
-            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            public boolean onCreateActionMode(ActionMode mode, Menu menu) {                
+                Integer selectionStart = view.getSelectionStart();
+                Integer selectionEnd = view.getSelectionEnd();
+                ReadableArray highlights = rnView.getHighlights();                
+                
+                for (int i = 0; i < highlights.size(); i++) {
+                    final ReadableMap currentItem = highlights.getMap(i);               
+
+                    if (selectionStart >= currentItem.getInt("start")  && selectionEnd <= currentItem.getInt("end")) {
+                        Selection.setSelection((Spannable) view.getText(), currentItem.getInt("start"), currentItem.getInt("end"));
+                        return true;
+                    }
+                }
+
                 Selection.setSelection((Spannable) view.getText(), 0, view.getText().length());
                 return true;
             }
